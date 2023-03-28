@@ -1,3 +1,7 @@
+
+#pragma comment(lib, "ws2_32.lib")
+#include <WinSock2.h>
+
 #include <iostream>
 #include <string>
 #include <thread>
@@ -13,6 +17,12 @@
 #pragma comment(lib, "ws2_32.lib")
 #pragma comment(lib, "mysqlcppconn.lib")
 
+#include "mysql_connection.h"
+#include <cppconn/driver.h>	// ì´ê²Œ ì™œ ì˜¤ë¥˜ê°€ ëœ¨ì§€.
+#include <cppconn/exception.h>
+#include <cppconn/prepared_statement.h>
+#include <cppconn/statement.h> // MySQL ë°ì´í„° í•œê¸€ ê¹¨ì§ ë°©ì§€
+
 #define MAX_SIZE 1024
 
 using std::cout;
@@ -22,8 +32,8 @@ using std::string;
 
 SOCKET client_sock;
 string input = "";
-string user_id = "¾ÆÀÌµğ : ";
-string pw = "ºñ¹Ğ¹øÈ£ : ";
+string user_id = "ì•„ì´ë”” : ";
+string pw = "ë¹„ë°€ë²ˆí˜¸ : ";
 
 bool login(string user_id, string pw) {
     try {
@@ -33,11 +43,11 @@ bool login(string user_id, string pw) {
         sql::ResultSet* res;
 
         driver = get_driver_instance();
-        con = driver->connect("tcp://localhost:3306", "user", "1234"); // DB Á¢¼Ó Á¤º¸ ÀÔ·Â
+        con = driver->connect("tcp://localhost:3306", "user", "1234"); // DB ì ‘ì† ì •ë³´ ì…ë ¥
         
-        con->setSchema("cpp_db"); // »ç¿ëÇÒ DB ÀÌ¸§ ÀÔ·Â
+        con->setSchema("cpp_db"); // ì‚¬ìš©í•  DB ì´ë¦„ ì…ë ¥
 
-        pstmt = con->prepareStatement("SELECT * FROM inventory1 WHERE user_id=\"J\" AND pw = \"123\""); // inventory1 Å×ÀÌºí¿¡¼­ id¿Í pw°¡ ÀÏÄ¡ÇÏ´Â Çà °Ë»ö
+        pstmt = con->prepareStatement("SELECT * FROM inventory1 WHERE user_id=\"J\" AND pw = \"123\""); // inventory1 í…Œì´ë¸”ì—ì„œ idì™€ pwê°€ ì¼ì¹˜í•˜ëŠ” í–‰ ê²€ìƒ‰
 
         res = pstmt->executeQuery();
 
@@ -48,13 +58,13 @@ bool login(string user_id, string pw) {
                 res->getInt(1), res->getString(2).c_str(), res->getInt(3));
 
 
-        if (res) { // ÀÏÄ¡ÇÏ´Â ÇàÀÌ ÀÖÀ¸¸é ·Î±×ÀÎ ¼º°ø
+        if (res) { // ì¼ì¹˜í•˜ëŠ” í–‰ì´ ìˆìœ¼ë©´ ë¡œê·¸ì¸ ì„±ê³µ
             delete res;
             delete pstmt;
             delete con;
             return true;
         }
-        else { // ÀÏÄ¡ÇÏ´Â ÇàÀÌ ¾øÀ¸¸é ·Î±×ÀÎ ½ÇÆĞ
+        else { // ì¼ì¹˜í•˜ëŠ” í–‰ì´ ì—†ìœ¼ë©´ ë¡œê·¸ì¸ ì‹¤íŒ¨
             delete res;
             delete pstmt;
             delete con;
@@ -67,12 +77,10 @@ bool login(string user_id, string pw) {
     }
 }
 
-
 int chat_recv() {
     char buf[MAX_SIZE] = {};
     string msg;
     while (1) {
-
         ZeroMemory(&buf, MAX_SIZE);
         if (recv(client_sock, buf, MAX_SIZE, 0) > 0) {
             msg = buf;
@@ -93,17 +101,17 @@ int main() {
     int code = WSAStartup(MAKEWORD(2, 2), &wsa);
     if (!code) {
         while (1) {
-            cout << " ¾ÆÀÌµğ ÀÔ·Â >> ";
+            cout << " ì•„ì´ë”” ì…ë ¥ >> ";
             cin >> input;
             user_id += input;
-            cout << " ºñ¹Ğ¹øÈ£ ÀÔ·Â >> ";
+            cout << " ë¹„ë°€ë²ˆí˜¸ ì…ë ¥ >> ";
             cin >> input;
             pw += input;
-            if (login(input, pw)) break; // DB¿¡¼­ id¿Í pw °ËÁõ
+            if (login(input, pw)) break; // DBì—ì„œ idì™€ pw ê²€ì¦
             else {
-                user_id = "¾ÆÀÌµğ : ";
-                pw = "ºñ¹Ğ¹øÈ£ : ";
-                cout << "·Î±×ÀÎ ½ÇÆĞ. ´Ù½Ã ÀÔ·ÂÇØÁÖ¼¼¿ä."
+                user_id = "ì•„ì´ë”” : ";
+                pw = "ë¹„ë°€ë²ˆí˜¸ : ";
+                cout << "ë¡œê·¸ì¸ ì‹¤íŒ¨. ë‹¤ì‹œ ì…ë ¥í•´ì£¼ì„¸ìš”."
                     << endl;
             }
         }
