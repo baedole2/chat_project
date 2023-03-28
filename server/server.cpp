@@ -210,12 +210,7 @@ void recv_msg(int idx) {
 				if (stmt) { delete stmt; stmt = nullptr; }
 
 				stmt = con->createStatement();
-				//stmt->execute("DROP TABLE IF EXISTS chat_data");
-				//cout << "Finished dropping table (if existed)" << endl;
-				//테이블 규칙 ( 1. 글 번호  2. 입력한 날짜  3. 회원등록번호  4. 닉네임  5. 채팅내용 )
-				//stmt->execute("CREATE TABLE chat_data (chat_number serial PRIMARY KEY, date DATE, id INTEGER, nickname VARCHAR(50), content TEXT(200));");
-				//cout << "Finished creating table" << endl;
-				//delete stmt;
+
 
 				pstmt = con->prepareStatement("INSERT INTO chat_data (date, id, nickname, content) VALUES(? ,? ,? ,?)");
 
