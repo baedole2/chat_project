@@ -6,7 +6,6 @@
 #include <thread>
 #include <sstream>
 #include <WS2tcpip.h>
-
 #include <mysql_connection.h>
 #include <cppconn/driver.h>
 #include <cppconn/prepared_statement.h>
@@ -35,7 +34,7 @@ bool login(string user_id, string pw) {
 
         driver = get_driver_instance();
         con = driver->connect("tcp://localhost:3306", "user", "1234"); // DB 접속 정보 입력
-
+        
         con->setSchema("cpp_db"); // 사용할 DB 이름 입력
 
         pstmt = con->prepareStatement("SELECT * FROM inventory1 WHERE user_id=\"J\" AND pw = \"123\""); // inventory1 테이블에서 id와 pw가 일치하는 행 검색

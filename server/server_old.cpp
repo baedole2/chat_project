@@ -1,4 +1,4 @@
-﻿#pragma comment (lib, "ws2_32.lib")	// 라이브러리 호출
+#pragma comment (lib, "ws2_32.lib")	// 라이브러리 호출
 
 #include <string>
 #include <vector>
@@ -53,7 +53,7 @@ int main() {
 	// winsock version 2.2 사용
 	// winsock 초기화 하는 함수
 	// 실행 성공시 0 반환, 실패하면 0 이외의 값 반환
-	cout << "진짜 한글 깨짐임?" << endl;
+
 	if (!code) {	// 0 = false. 성공했다면 0이 들어가므로 !0 은 true
 		server_init();
 
@@ -161,12 +161,12 @@ void add_client() {
 	cout << msg << endl;
 
 	sck_list.push_back(new_client);
-
+	
 	std::thread th(recv_msg, client_count);
-
+	
 	client_count++;
-	cout << "[공지] 현재 접속자 수 : " << client_count << "123" << endl;
-	//send_msg(msg.c_str());	// c_str() -
+	cout << "[공지] 현재 접속자 수 : " << client_count << "명" << endl;
+	send_msg(msg.c_str());	// c_str() -> string을 const char로 변경해주는 함수
 	th.join();
 }
 
@@ -235,7 +235,7 @@ void recv_msg(int idx) {
 				pstmt->setString(3, sck_list[idx].user);
 				pstmt->setString(4, msg.c_str());
 				pstmt->execute();
-				cout << "한글 문제임 ㄹㅇ?" << endl;
+				cout << "채팅 내역 저장" << endl;
 
 				delete pstmt;
 				delete con;

@@ -1,10 +1,10 @@
-#pragma comment (lib, "ws2_32.lib")
-// pragmae comment ¶û ¾ø´Â°Å¶û ¹«½¼Â÷ÀÌ
+ï»¿#pragma comment (lib, "ws2_32.lib")
+// pragmae comment ï¿½ï¿½ ï¿½ï¿½ï¿½Â°Å¶ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 
 #include <iostream>
 #include <string>
 #include <thread>
-#include <WinSock2.h>	// À©µµ¿ì ¼ÒÄÏ ¶óÀÌºê·¯¸®
+#include <WinSock2.h>	// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ìºê·¯ï¿½ï¿½
 #include <sstream>
 #include <WS2tcpip.h>
 
@@ -27,7 +27,7 @@ int chat_recv() {
 		if (recv(client_sock, buf, MAX_SIZE, 0) > 0) {
 			msg = buf;
 			string user;
-			std::stringstream ss(msg);	// msg ¿¡ ´ã±ä ¹®ÀÚ¸¦ stream(01010 ·Î ¹Ù²Ù´Â°Å) È­
+			std::stringstream ss(msg);	// msg ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ú¸ï¿½ stream(01010 ï¿½ï¿½ ï¿½Ù²Ù´Â°ï¿½) È­
 			ss >> user;
 
 			if (user != my_nick)
@@ -44,7 +44,7 @@ int main() {
 	WSADATA wsa;
 	int code = WSAStartup(MAKEWORD(2, 2), &wsa);
 	if (!code) {
-		cout << "»ç¿ëÇÒ ´Ð³×ÀÓ ÀÔ·Â >> ";
+		cout << "ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ð³ï¿½ï¿½ï¿½ ï¿½Ô·ï¿½ >> ";
 		cin >> my_nick;
 
 		client_sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
@@ -56,8 +56,8 @@ int main() {
 		//client_addr.sin_addr.s_addr = htonl(INADDR_ANY);
 
 		while (1) {
-			if (!connect(client_sock, (SOCKADDR*)&client_addr, sizeof(client_addr))) {	// Á¤»ó ¿¬°á µÇ¸é 0¹ÝÈ¯
-				send(client_sock, my_nick.c_str(), my_nick.length(), 0);	// ´Ð³×ÀÓ Àü¼Û
+			if (!connect(client_sock, (SOCKADDR*)&client_addr, sizeof(client_addr))) {	// ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ç¸ï¿½ 0ï¿½ï¿½È¯
+				send(client_sock, my_nick.c_str(), my_nick.length(), 0);	// ï¿½Ð³ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 				break;
 			}
 			cout << "connecting..." << endl;
@@ -68,7 +68,7 @@ int main() {
 			string text;
 			std::getline(cin, text);
 			const char* buffer = text.c_str();
-			//cout << my_nick << " : ";	// ¿©±â ¹Ù²Þ
+			//cout << my_nick << " : ";	// ï¿½ï¿½ï¿½ï¿½ ï¿½Ù²ï¿½
 			send(client_sock, buffer, strlen(buffer), 0);
 		}
 
