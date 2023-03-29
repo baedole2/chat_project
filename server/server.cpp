@@ -151,7 +151,6 @@ void add_client() {
 	// - 데이터를 받을 변수
 	// - 두번째 매개변수의 길이
 	// - flag, 함수의 동작에 영향. 부가 옵션
-	buf;
 
 	new_client.user = string(buf);
 	// buf를 string으로 변환해서 담음
@@ -175,6 +174,7 @@ void add_client() {
 	sql::Connection* con;
 	sql::PreparedStatement* pstmt;
 	sql::ResultSet* result;
+	sql::Statement* stmt;
 
 	try
 	{
@@ -190,27 +190,36 @@ void add_client() {
 
 
 	con->setSchema("cpp_db_chat");
-
+	// connector에서 한글 출력을 위한 셋팅
+	stmt = con->createStatement();
+	stmt->execute("set names euckr");	//euc-kr 인코딩
+	if (stmt) { delete stmt; stmt = nullptr; }
 	//select  
 	pstmt = con->prepareStatement("SELECT * FROM chat_data;");
 	result = pstmt->executeQuery();
 	//테이블 규칙 ( 1. 글 번호  2. 입력한 날짜  3. 회원등록번호  4. 닉네임  5. 채팅내용 )
 	//chat_data (chat_number serial PRIMARY KEY, date DATE, id INTEGER, nickname VARCHAR(50), content TEXT(200));");
 
-	while (result->next())
-		printf("Reading from table=(%d, %s, %d, %s, %s)\n",
-			result->getInt(1), result->getString(2).c_str(), result->getInt(3),
-			result->getString(4).c_str(), result->getString(5).c_str());
+	//while (result->next())
+	//	printf("Reading from table=(%d, %s, %d, %s, %s)\n",
+	//		result->getInt(1), result->getString(2).c_str(), result->getInt(3),
+	//		result->getString(4).c_str(), result->getString(5).c_str());
 
+	string last_chatting = "";
+	string nickname, content;
+	while (result->next()) {
+		nickname = result->getString("nickname");
+		content = result->getString("content");
 
+		last_chatting += nickname + " : " + content + "\n";
+	}
+	cout << last_chatting;
 
 	delete result;
 	delete pstmt;
 	delete con;
 
-
-
-	//send_msg(msg.c_str());	// c_str() -
+	send_msg(msg.c_str());	// c_str() -
 	th.join();
 }
 
@@ -263,7 +272,6 @@ void recv_msg(int idx) {
 				stmt->execute("set names euckr");	//euc-kr 인코딩
 				if (stmt) { delete stmt; stmt = nullptr; }
 
-				stmt = con->createStatement();
 
 				//stmt->execute("DROP TABLE IF EXISTS chat_data");
 				//cout << "Finished dropping table (if existed)" << endl;
@@ -272,6 +280,7 @@ void recv_msg(int idx) {
 				//cout << "Finished creating table" << endl;
 				//delete stmt;
 
+				// stmt = con->createStatement();
 				pstmt = con->prepareStatement("INSERT INTO chat_data (date, id, nickname, content) VALUES(? ,? ,? ,?)");
 
 				pstmt->setString(1, "1991-01-02"/*채팅 입력한 날짜*/);
@@ -279,7 +288,6 @@ void recv_msg(int idx) {
 				pstmt->setString(3, sck_list[idx].user);
 				pstmt->setString(4, msg.c_str());
 				pstmt->execute();
-				cout << "한글 문제임 ㄹㅇ?" << endl;
 
 				delete pstmt;
 				delete con;
