@@ -53,7 +53,6 @@ int main() {
 	// winsock version 2.2 사용
 	// winsock 초기화 하는 함수
 	// 실행 성공시 0 반환, 실패하면 0 이외의 값 반환
-	cout << "진짜 한글 깨짐임?" << endl;
 	if (!code) {	// 0 = false. 성공했다면 0이 들어가므로 !0 은 true
 		server_init();
 
@@ -165,7 +164,52 @@ void add_client() {
 	std::thread th(recv_msg, client_count);
 
 	client_count++;
-	cout << "[공지] 현재 접속자 수 : " << client_count << "123" << endl;
+	cout << "[공지] 현재 접속자 수 : " << client_count << "명" << endl;
+
+	// 과거 채팅 내역 불러오는 부분
+
+	cout << "이전 채팅 내역을 가져옵니다." << endl;
+
+
+	sql::Driver* driver;
+	sql::Connection* con;
+	sql::PreparedStatement* pstmt;
+	sql::ResultSet* result;
+
+	try
+	{
+		driver = get_driver_instance();
+		con = driver->connect(server, username, password);
+	}
+	catch (sql::SQLException e)
+	{
+		cout << "Could not connect to server. Error message: " << e.what() << endl;
+		system("pause");
+		exit(1);
+	}
+
+
+	con->setSchema("cpp_db_chat");
+
+	//select  
+	pstmt = con->prepareStatement("SELECT * FROM chat_data;");
+	result = pstmt->executeQuery();
+	//테이블 규칙 ( 1. 글 번호  2. 입력한 날짜  3. 회원등록번호  4. 닉네임  5. 채팅내용 )
+	//chat_data (chat_number serial PRIMARY KEY, date DATE, id INTEGER, nickname VARCHAR(50), content TEXT(200));");
+
+	while (result->next())
+		printf("Reading from table=(%d, %s, %d, %s, %s)\n",
+			result->getInt(1), result->getString(2).c_str(), result->getInt(3),
+			result->getString(4).c_str(), result->getString(5).c_str());
+
+
+
+	delete result;
+	delete pstmt;
+	delete con;
+
+
+
 	//send_msg(msg.c_str());	// c_str() -
 	th.join();
 }
@@ -194,22 +238,22 @@ void recv_msg(int idx) {
 			// 데이터 베이스 저장하는 위치
 			if (1)
 			{
-				sql::Driver* driver;
-				sql::Connection* con;
-				sql::PreparedStatement* pstmt;
-				sql::Statement* stmt;	// MySQL 데이터 한글 깨짐 방지
+					sql::Driver* driver;
+					sql::Connection* con;
+					sql::PreparedStatement* pstmt;
+					sql::Statement* stmt;	// MySQL 데이터 한글 깨짐 방지
 
-				try
-				{
-					driver = get_driver_instance();
-					con = driver->connect(server, username, password);
-				}
-				catch (sql::SQLException e)
-				{
-					cout << "Could not connect to server. Error message: " << e.what() << endl;
-					system("pause");
-					exit(1);
-				}
+					try
+					{
+						driver = get_driver_instance();
+						con = driver->connect(server, username, password);
+					}
+					catch (sql::SQLException e)
+					{
+						cout << "Could not connect to server. Error message: " << e.what() << endl;
+						system("pause");
+						exit(1);
+					}
 
 				//please create database "quickstartdb" ahead of time
 				con->setSchema("cpp_db_chat");
