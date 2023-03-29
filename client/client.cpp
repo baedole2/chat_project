@@ -14,6 +14,7 @@
 #include <cppconn/statement.h>
 #include <stdlib.h>
 
+
 #define MAX_SIZE 1024
 
 using std::cout;
@@ -33,34 +34,38 @@ bool login(string user_id, string pw) {
         sql::PreparedStatement* pstmt;
         sql::ResultSet* res;
 
+        int table_id = 0;
+        string table_user_id = "";
+        int table_pw = 0;
+
+
         driver = get_driver_instance();
         con = driver->connect("tcp://localhost:3306", "user", "1234"); // DB 접속 정보 입력
 
         con->setSchema("cpp_db"); // 사용할 DB 이름 입력
-
-        pstmt = con->prepareStatement("SELECT * FROM inventory1 WHERE user_id=\"J\" AND pw = \"123\""); // inventory1 테이블에서 id와 pw가 일치하는 행 검색
+        pstmt = con->prepareStatement("SELECT * FROM inventory1"); // inventory1 테이블에서 id와 pw가 일치하는 행 검색
 
         res = pstmt->executeQuery();
 
+        while (res->next()) {
+            table_id = res->getInt("id");
+            table_user_id = res->getString("user_id");  //50
+            table_pw = res->getInt("pw");
 
-        string input = "";
-        while (res->next())
-            printf("Reading from table=(%d, %s, %d)\n",
-                res->getInt(1), res->getString(2).c_str(), res->getInt(3));
-
-
-        if (res) { // 일치하는 행이 있으면 로그인 성공
-            delete res;
-            delete pstmt;
-            delete con;
-            return true;
+            if (user_id == table_user_id) { // 일치하는 행이 있으면 로그인 성공
+                delete res;
+                delete pstmt;
+                delete con;
+                return true;
+            }
+            else { // 일치하는 행이 없으면 로그인 실패
+                delete res;
+                delete pstmt;
+                delete con;
+                return false;
+            }
         }
-        else { // 일치하는 행이 없으면 로그인 실패
-            delete res;
-            delete pstmt;
-            delete con;
-            return false;
-        }
+
     }
     catch (sql::SQLException& e) {
         cout << e.what() << endl;
@@ -94,11 +99,13 @@ int main() {
         while (1) {
             cout << " 아이디 입력 >> ";
             cin >> input;
+            string login_id = input;
             user_id += input;
             cout << " 비밀번호 입력 >> ";
-            cin >> input;
+            cin >> input;   //input - 123
+            string login_pw = input;
             pw += input;
-            if (login(input, pw)) break; // DB에서 id와 pw 검증
+            if (login(login_id, login_pw)) break; // DB에서 id와 pw 검증
             else {
                 user_id = "아이디 : ";
                 pw = "비밀번호 : ";
