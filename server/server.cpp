@@ -167,9 +167,6 @@ void add_client() {
 
 	// 과거 채팅 내역 불러오는 부분
 
-	cout << "이전 채팅 내역을 가져옵니다." << endl;
-
-
 	sql::Driver* driver;
 	sql::Connection* con;
 	sql::PreparedStatement* pstmt;
@@ -213,13 +210,18 @@ void add_client() {
 
 		last_chatting += nickname + " : " + content + "\n";
 	}
-	cout << last_chatting;
+	last_chatting += "----------\n이러면 한글도 나오게되나?\n----------\n";
+
+	//cout << last_chatting;
+	
 
 	delete result;
 	delete pstmt;
 	delete con;
 
+	
 	send_msg(msg.c_str());	// c_str() -
+	send_msg(last_chatting.c_str());
 	th.join();
 }
 
@@ -236,6 +238,12 @@ void send_msg(const char* msg) {
 void recv_msg(int idx) {
 	char buf[MAX_SIZE] = {};
 	string msg = "";
+
+	sql::Driver* driver;
+	sql::Connection* con;
+	sql::PreparedStatement* pstmt;
+	sql::Statement* stmt;	// MySQL 데이터 한글 깨짐 방지
+
 	while (1) {
 		ZeroMemory(&buf, MAX_SIZE);
 		if (recv(sck_list[idx].sck, buf, MAX_SIZE, 0) > 0) {
@@ -245,53 +253,46 @@ void recv_msg(int idx) {
 			send_msg(msg.c_str());
 
 			// 데이터 베이스 저장하는 위치
-			if (1)
+			try
 			{
-					sql::Driver* driver;
-					sql::Connection* con;
-					sql::PreparedStatement* pstmt;
-					sql::Statement* stmt;	// MySQL 데이터 한글 깨짐 방지
-
-					try
-					{
-						driver = get_driver_instance();
-						con = driver->connect(server, username, password);
-					}
-					catch (sql::SQLException e)
-					{
-						cout << "Could not connect to server. Error message: " << e.what() << endl;
-						system("pause");
-						exit(1);
-					}
-
-				//please create database "quickstartdb" ahead of time
-				con->setSchema("cpp_db_chat");
-
-				// connector에서 한글 출력을 위한 셋팅
-				stmt = con->createStatement();
-				stmt->execute("set names euckr");	//euc-kr 인코딩
-				if (stmt) { delete stmt; stmt = nullptr; }
-
-
-				//stmt->execute("DROP TABLE IF EXISTS chat_data");
-				//cout << "Finished dropping table (if existed)" << endl;
-				//테이블 규칙 ( 1. 글 번호  2. 입력한 날짜  3. 회원등록번호  4. 닉네임  5. 채팅내용 )
-				//stmt->execute("CREATE TABLE chat_data (chat_number serial PRIMARY KEY, date DATE, id INTEGER, nickname VARCHAR(50), content TEXT(200));");
-				//cout << "Finished creating table" << endl;
-				//delete stmt;
-
-				// stmt = con->createStatement();
-				pstmt = con->prepareStatement("INSERT INTO chat_data (date, id, nickname, content) VALUES(? ,? ,? ,?)");
-
-				pstmt->setString(1, "1991-01-02"/*채팅 입력한 날짜*/);
-				pstmt->setInt(2, 2 /* 회원 번호 */);
-				pstmt->setString(3, sck_list[idx].user);
-				pstmt->setString(4, msg.c_str());
-				pstmt->execute();
-
-				delete pstmt;
-				delete con;
+				driver = get_driver_instance();
+				con = driver->connect(server, username, password);
 			}
+			catch (sql::SQLException e)
+			{
+				cout << "Could not connect to server. Error message: " << e.what() << endl;
+				system("pause");
+				exit(1);
+			}
+
+			//please create database "quickstartdb" ahead of time
+			con->setSchema("cpp_db_chat");
+
+			// connector에서 한글 출력을 위한 셋팅
+			stmt = con->createStatement();
+			stmt->execute("set names euckr");	//euc-kr 인코딩
+			if (stmt) { delete stmt; stmt = nullptr; }
+
+
+			//stmt->execute("DROP TABLE IF EXISTS chat_data");
+			//cout << "Finished dropping table (if existed)" << endl;
+			//테이블 규칙 ( 1. 글 번호  2. 입력한 날짜  3. 회원등록번호  4. 닉네임  5. 채팅내용 )
+			//stmt->execute("CREATE TABLE chat_data (chat_number serial PRIMARY KEY, date DATE, id INTEGER, nickname VARCHAR(50), content TEXT(200));");
+			//cout << "Finished creating table" << endl;
+			//delete stmt;
+
+			// stmt = con->createStatement();
+			pstmt = con->prepareStatement("INSERT INTO chat_data (date, id, nickname, content) VALUES(? ,? ,? ,?)");
+
+			pstmt->setString(1, "1991-01-02"/*채팅 입력한 날짜*/);
+			pstmt->setInt(2, 2 /* 회원 번호 */);
+			pstmt->setString(3, sck_list[idx].user);
+			pstmt->setString(4, msg.c_str());
+			pstmt->execute();
+
+			delete pstmt;
+			delete con;
+
 		}
 		else {
 			// 무언가 오류가 생겼을 에

@@ -6,6 +6,7 @@
 #include <thread>
 #include <sstream>
 #include <WS2tcpip.h>
+#include <conio.h>  // getch 사용하기위해.
 
 #include <mysql_connection.h>
 #include <cppconn/driver.h>
@@ -51,8 +52,9 @@ bool login(string user_id, string pw) {
             table_id = res->getInt("id");
             table_user_id = res->getString("user_id");  //50
             table_pw = res->getInt("pw");
+            int int_pw = std::stoi(pw); //형변환 str -> int
+            if (user_id == table_user_id && int(int_pw) == table_pw) { // 일치하는 행이 있으면 로그인 성공
 
-            if (user_id == table_user_id) { // 일치하는 행이 있으면 로그인 성공
                 delete res;
                 delete pstmt;
                 delete con;
@@ -101,15 +103,35 @@ int main() {
             cin >> input;
             string login_id = input;
             user_id += input;
+
             cout << " 비밀번호 입력 >> ";
-            cin >> input;   //input - 123
-            string login_pw = input;
+
+            // 키보드 입력 받기
+            string password;
+            char ch;
+            while ((ch = _getch()) != 13) { // 아스키코드 13으로 값을 받기 전까지 작동 (Enter키)
+                if (ch == 8) { // 8 = 백스페이스
+                    if (!password.empty()) {
+                        password.pop_back(); // 마지막 입력된 문자 삭제
+                        std::cout << "\b \b"; // 화면에 * 삭제
+                    }
+                }
+                else if (ch >= 32 && ch <= 126) { // 키입력
+                    password += ch;
+                    std::cout << "*"; // print * instead of the entered character
+                }
+            }
+
+            std::cout << std::endl;
+            std::cout << "Entered password: " << password << std::endl;
+            string login_pw = password;
             pw += input;
+
             if (login(login_id, login_pw)) break; // DB에서 id와 pw 검증
             else {
                 user_id = "아이디 : ";
                 pw = "비밀번호 : ";
-                cout << "로그인 실패. 다시 입력해주세요."
+                cout << "\n로그인 실패. 다시 입력해주세요."
                     << endl;
             }
         }
@@ -134,7 +156,9 @@ int main() {
         string send_msg;
         while (1) {
             getline(cin, send_msg);
-            string full_msg = user_id + send_msg;
+            string full_msg = send_msg;
+            send_msg += "1";
+            cout << send_msg << endl;
             send(client_sock, full_msg.c_str(), full_msg.size(), 0);
             if (send_msg == "/quit") break;
         }
