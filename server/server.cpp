@@ -7,6 +7,8 @@
 
 #include <stdlib.h>
 #include <iostream>
+#include <sstream>	// 문자열 나누기위해 getline
+#include <ctime>
 
 #include "mysql_connection.h"
 #include <cppconn/driver.h>	// 이게 왜 오류가 뜨지.
@@ -59,7 +61,6 @@ int main() {
 		thread th1[MAX_CLIENT];
 		for (int i = 0; i < MAX_CLIENT; i++) {
 			th1[i] = std::thread(add_client);
-			cout << "실행" << endl;
 		}
 
 		while (1) {
@@ -152,7 +153,14 @@ void add_client() {
 	// - 두번째 매개변수의 길이
 	// - flag, 함수의 동작에 영향. 부가 옵션
 
-	new_client.user = string(buf);
+	string sbuf = string(buf);	// char 자료형 buf 를 string 으로 변환
+	std::istringstream iss(sbuf);	// string을 istringstream 형변환 : 입출력스트림
+	char separator = '|';
+
+	string user_id = "";
+	getline(iss, user_id, separator);	// user_id 에 담아둠.
+
+	new_client.user = user_id;
 	// buf를 string으로 변환해서 담음
 
 	string msg = "[공지]" + new_client.user + "님이 입장했습니다!";
@@ -243,6 +251,7 @@ void recv_msg(int idx) {
 	sql::Connection* con;
 	sql::PreparedStatement* pstmt;
 	sql::Statement* stmt;	// MySQL 데이터 한글 깨짐 방지
+	sql::ResultSet* result;
 
 	while (1) {
 		ZeroMemory(&buf, MAX_SIZE);
@@ -251,6 +260,14 @@ void recv_msg(int idx) {
 			msg = sck_list[idx].user + " : " + buf;
 			cout << msg << endl;
 			send_msg(msg.c_str());
+
+			// 여기서 채팅 닉네임 떨궈야함
+			std::istringstream iss(msg);	// string을 istringstream 형변환 : 입출력스트림
+			string separator = " : ";
+
+			string context = "";
+			context = msg.substr(msg.find(separator) + separator.length());	// 닉네임 떨군 상태로 채팅 넣음
+
 
 			// 데이터 베이스 저장하는 위치
 			try
@@ -277,22 +294,42 @@ void recv_msg(int idx) {
 			//stmt->execute("DROP TABLE IF EXISTS chat_data");
 			//cout << "Finished dropping table (if existed)" << endl;
 			//테이블 규칙 ( 1. 글 번호  2. 입력한 날짜  3. 회원등록번호  4. 닉네임  5. 채팅내용 )
-			//stmt->execute("CREATE TABLE chat_data (chat_number serial PRIMARY KEY, date DATE, id INTEGER, nickname VARCHAR(50), content TEXT(200));");
+			//stmt->execute("CREATE TABLE chat_data (chat_number serial PRIMARY KEY, date DATETIME, id INTEGER, nickname VARCHAR(50), content TEXT(200));");
 			//cout << "Finished creating table" << endl;
 			//delete stmt;
 
 			// stmt = con->createStatement();
-			pstmt = con->prepareStatement("INSERT INTO chat_data (date, id, nickname, content) VALUES(? ,? ,? ,?)");
+			con->setSchema("cpp_db");
+			pstmt = con->prepareStatement("SELECT * FROM inventory1;");
+			result = pstmt->executeQuery();
+			con->setSchema("cpp_db_chat");
 
-			pstmt->setString(1, "1991-01-02"/*채팅 입력한 날짜*/);
-			pstmt->setInt(2, 2 /* 회원 번호 */);
+			int id = 0;
+			string nickname = "";
+			while (result->next()) {
+				id = result->getInt("id");
+				nickname = result->getString("user_id");
+				if (sck_list[idx].user == nickname)
+					break;
+			}
+
+			time_t timer;
+			timer = time(NULL); // 1970년 1월 1일 0시 0분 0초부터 시작하여 현재까지의 초
+			tm t;
+			localtime_s(&t,&timer); // 포맷팅을 위해 구조체에 넣기
+			string datetime = "";
+			datetime += std::to_string(t.tm_year+1900) + "-" + std::to_string(t.tm_mon+1) + "-" + std::to_string(t.tm_mday) + " "
+				+ std::to_string(t.tm_hour) + ":" + std::to_string(t.tm_min) + ":" + std::to_string(t.tm_sec);
+
+			pstmt = con->prepareStatement("INSERT INTO chat_data (date, id, nickname, content) VALUES(? ,? ,? ,?)");
+			pstmt->setString(1, datetime/*채팅 입력한 날짜*/);
+			pstmt->setInt(2, id /* 회원 번호 */);
 			pstmt->setString(3, sck_list[idx].user);
-			pstmt->setString(4, msg.c_str());
+			pstmt->setString(4, context.c_str());
 			pstmt->execute();
 
 			delete pstmt;
 			delete con;
-
 		}
 		else {
 			// 무언가 오류가 생겼을 에

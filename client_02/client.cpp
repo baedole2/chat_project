@@ -1,10 +1,10 @@
 ﻿#pragma comment (lib, "ws2_32.lib")
-// pragmae comment �� ���°Ŷ� ��������
+// pragmae comment 랑 없는거랑 무슨차이
 
 #include <iostream>
 #include <string>
 #include <thread>
-#include <WinSock2.h>	// ������ ���� ���̺귯��
+#include <WinSock2.h>	// 윈도우 소켓 라이브러리
 #include <sstream>
 #include <WS2tcpip.h>
 
@@ -27,7 +27,7 @@ int chat_recv() {
 		if (recv(client_sock, buf, MAX_SIZE, 0) > 0) {
 			msg = buf;
 			string user;
-			std::stringstream ss(msg);	// msg �� ��� ���ڸ� stream(01010 �� �ٲٴ°�) ȭ
+			std::stringstream ss(msg);	// msg 에 담긴 문자를 stream(01010 로 바꾸는거) 화
 			ss >> user;
 
 			if (user != my_nick)
@@ -44,7 +44,7 @@ int main() {
 	WSADATA wsa;
 	int code = WSAStartup(MAKEWORD(2, 2), &wsa);
 	if (!code) {
-		cout << "����� �г��� �Է� >> ";
+		cout << "사용할 닉네임 입력 >> ";
 		cin >> my_nick;
 
 		client_sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
@@ -56,8 +56,8 @@ int main() {
 		//client_addr.sin_addr.s_addr = htonl(INADDR_ANY);
 
 		while (1) {
-			if (!connect(client_sock, (SOCKADDR*)&client_addr, sizeof(client_addr))) {	// ���� ���� �Ǹ� 0��ȯ
-				send(client_sock, my_nick.c_str(), my_nick.length(), 0);	// �г��� ����
+			if (!connect(client_sock, (SOCKADDR*)&client_addr, sizeof(client_addr))) {	// 정상 연결 되면 0반환
+				send(client_sock, my_nick.c_str(), my_nick.length(), 0);	// 닉네임 전송
 				break;
 			}
 			cout << "connecting..." << endl;
@@ -68,7 +68,7 @@ int main() {
 			string text;
 			std::getline(cin, text);
 			const char* buffer = text.c_str();
-			//cout << my_nick << " : ";	// ���� �ٲ�
+			//cout << my_nick << " : ";	// 여기 바꿈
 			send(client_sock, buffer, strlen(buffer), 0);
 		}
 
