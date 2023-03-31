@@ -132,6 +132,7 @@ int main() {
             string login_pw = password;
 
             if (login(login_id, login_pw)) {// DB에서 id와 pw 검증
+                user_id = login_id;
                 break;
             }
             else {
@@ -172,23 +173,24 @@ int main() {
         }
 
         std::thread recv_thread(chat_recv);
-        //recv_thread.detach(); -> 사용한 이유?
+        recv_thread.detach();
         while (1) {
             string text;
             getline(cin, text);
             const char* buffer = text.c_str();
-            cout << text << endl;
             send(client_sock, text.c_str(), text.size(), 0);
             if (text == "/quit") break; // 클라이언트 부에서 탈출
         }
-        recv_thread.join();
+
+        //recv_thread.join();
         closesocket(client_sock);
+
+        WSACleanup();   // Winsock DLL을 종료하는 함수
+        return 0;
     }
     else {
         cout << "WSAStartup 오류 \nerrorcode : " << code << endl;
         return -1;
     }
 
-    WSACleanup();   // Winsock DLL을 종료하는 함수
-    return 0;
 }
