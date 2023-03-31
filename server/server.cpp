@@ -66,12 +66,12 @@ int main() {
 		while (1) {
 			string text, msg = "";
 			std::getline(cin, text);
+
 			const char* buf = text.c_str();
-
 			msg = server_sock.user + " : " + buf;
-
 			send_msg(msg.c_str());
 		}
+		
 
 		for (int i = 0; MAX_CLIENT; i++) {
 			th1[i].join();
@@ -218,7 +218,7 @@ void add_client() {
 
 		last_chatting += nickname + " : " + content + "\n";
 	}
-	last_chatting += "----------\n이러면 한글도 나오게되나?\n----------\n";
+	last_chatting += "--------------------\n과거 채팅내역 입니다.\n--------------------\n";
 
 	//cout << last_chatting;
 	
@@ -267,7 +267,6 @@ void recv_msg(int idx) {
 
 			string context = "";
 			context = msg.substr(msg.find(separator) + separator.length());	// 닉네임 떨군 상태로 채팅 넣음
-
 
 			// 데이터 베이스 저장하는 위치
 			try
